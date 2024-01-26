@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<h2 class="text-center">Plot Data</h2><br>
+
+<h3>View Computed Operation</h3><br>
+<form method="post" action="/plot">
+    <div class="container">
+      <div class="row">
+        <div class="col">
+          <label for="dataName">Data Name:</label>
+            <select id="dataName" name="dataName">
+                {% for name in data_names %}
+                    <option value="{{ name }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col">
+          <label for="xColumn">X Column:</label>
+            <select name="xColumn" id="xColumn">
+                {% for columns in columns %}
+                    <option value="{{ columns }}">{{ columns }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col">
+          <label for="operation">Operation:</label>
+            <select id="operation" name="operation">
+                <option value="min">Minimum</option>
+                <option value="max">Maximum</option>
+                <option value="sum">Sum</option>
+            </select>
+
+        <input type="submit" value="Compute">
+        </div>
+        <div class="col"><div id="resultDiv"></div>
+        </div>
+      </div>
+    </div>
+</form>
+<br>
+<h2>Show Plot</h2><br>
+<form method="post" action="/plot">
+    <div class="container">
+  <div class="row">
+    <div class="col">
+        <label for="dataNamePlot">Data Name:</label>
+            <select id="dataNamePlot" name="dataName" required>
+                {% for dataName in data_names %}
+                    <option value="{{ dataName }}">{{ dataName }}</option>
+                {% endfor %}
+            </select>
+    </div>
+    <div class="col">
+        <label for="xColumn">Select X Column:</label>
+            <select name="xColumn" id="xColumn_plot">
+                {% for column in columns %}
+                    <option value="{{ column }}">{{ column }}</option>
+                {% endfor %}
+            </select>
+    </div>
+    <div class="col">
+        <label for="yColumn">Y Column:</label>
+            <select id="yColumn" name="yColumn" required>
+                 {% for column in columns %}
+                        <option value="{{ column }}">{{ column }}</option>
+                    {% endfor %}
+            </select>
+    <button type="submit">Plot</button>
+    </div>
+  </div>
+</div>
+    <br>
+    <div class="row justify-content-md-center">
+        <h3>Result: {{ result }}</h3><br>
+        <img src="{{ plot_url }}" alt="Plot">
+    </div>
+
+</form>
+
+{% endblock %}
