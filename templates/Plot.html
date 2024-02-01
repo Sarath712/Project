@@ -16,12 +16,8 @@
             </select>
         </div>
         <div class="col">
-          <label for="xColumn">X Column:</label>
-            <select name="xColumn" id="xColumn">
-                {% for columns in columns %}
-                    <option value="{{ columns }}">{{ columns }}</option>
-                {% endfor %}
-            </select>
+            <label for="xColumn">Column:</label>
+                <input type="text" name="xColumn" id="xColumn" placeholder="Enter column name">
         </div>
         <div class="col">
           <label for="operation">Operation:</label>
@@ -33,7 +29,9 @@
 
         <input type="submit" value="Compute">
         </div>
-        <div class="col"><div id="resultDiv"></div>
+        <div class="col">
+                <h5>Result: {{ result }}</h5>
+        </div>
         </div>
       </div>
     </div>
@@ -53,29 +51,52 @@
     </div>
     <div class="col">
         <label for="xColumn">Select X Column:</label>
-            <select name="xColumn" id="xColumn_plot">
-                {% for column in columns %}
-                    <option value="{{ column }}">{{ column }}</option>
-                {% endfor %}
-            </select>
+            <input type="text" name="xColumn" id="xColumn_plot" placeholder="Enter column name">
     </div>
     <div class="col">
         <label for="yColumn">Y Column:</label>
-            <select id="yColumn" name="yColumn" required>
-                 {% for column in columns %}
-                        <option value="{{ column }}">{{ column }}</option>
-                    {% endfor %}
-            </select>
+            <input type="text" name="yColumn" id="yColumn" placeholder="Enter column name">
     <button type="submit">Plot</button>
     </div>
   </div>
 </div>
     <br>
     <div class="row justify-content-md-center">
-        <h3>Result: {{ result }}</h3><br>
         <img src="{{ plot_url }}" alt="Plot">
     </div>
 
 </form>
+
+<script>
+    function fetchColumns() {
+        var dataName = document.getElementById("dataName").value;
+        var url = "/get_columns";  // Adjust the endpoint based on your backend route
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ data_name: dataName }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            var xColumnSelect = document.getElementById("xColumn");
+            xColumnSelect.innerHTML = "";  // Clear previous options
+
+            for (var i = 0; i < data.columns.length; i++) {
+                var option = document.createElement("option");
+                option.value = data.columns[i];
+                option.text = data.columns[i];
+                xColumnSelect.add(option);
+            }
+        })
+        .catch(error => console.error("Error fetching columns:", error));
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        fetchColumns();
+    });
+</script>
 
 {% endblock %}
