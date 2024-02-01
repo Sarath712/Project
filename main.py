@@ -66,7 +66,16 @@ def generate_create_table_query(file_path, table_name):
 
 @app.route('/plot', methods=['GET', 'POST'])
 def plot():
+    global cursor, conn
     try:
+        conn = psycopg2.connect(
+                user="postgres",
+                password="12345",
+                host="localhost",
+                port="5433",
+                database="postgres")
+        cursor = conn.cursor()
+
         cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
         data_names = [row[0] for row in cursor.fetchall()]
 
@@ -84,12 +93,12 @@ def plot():
             operation = request.form.get('operation', '')
 
             if operation:
-                cursor.execute(f"SELECT {operation}({x_column}) FROM {data_name}")
+                cursor.execute(f"SELECT {operation}(\"{x_column}\") FROM \"{data_name}\"")
                 result = cursor.fetchone()[0]
             else:
                 result = None
 
-            cursor.execute(f"SELECT {x_column}, y_column FROM {data_name} WHERE y_column IS NOT NULL")
+            cursor.execute(f"SELECT \"{x_column}\", \"{x_column}\" FROM \"{data_name}\" WHERE \"{x_column}\" IS NOT NULL")
             data = cursor.fetchall()
 
             return render_template('Plot.html', data_names=data_names, columns=columns, data_name=data_name,
@@ -102,40 +111,53 @@ def plot():
 
     return render_template('Plot.html', data_names=data_names, error_message='Invalid request')
 
+
 def get_column_names(data_name):
+    with psycopg2.connect(
+                user="postgres",
+                password="12345",
+                host="localhost",
+                port="5433",
+                database="postgres") as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{data_name}'")
+            columns = [row[0] for row in cursor.fetchall()]
+            return columns
+
+def perform_computation(data_name, column_name, operation, cursor):
     try:
-        data_name = request.form.get('dataName', '')
-        cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{data_name}'")
-        columns = [row[0] for row in cursor.fetchall()]
-        return jsonify(columns)
+        cursor.execute(f"SELECT {operation}({column_name}) FROM {data_name}")
+        result = cursor.fetchone()[0]
+        return result
     except Exception as e:
-        print(f"Error fetching columns for {data_name}: {e}")
-        return []
-
-def perform_computation(data_name, column_name, operation):
-    cursor.execute(f"SELECT {column_name} FROM {data_name};")
-    data = [row[0] for row in cursor.fetchall()]
-
-    if operation == 'min':
-        result = min(data)
-    elif operation == 'max':
-        result = max(data)
-    elif operation == 'sum':
-        result = sum(data)
-    else:
-        result = None
-
-    return result
+        print(f"Error performing computation: {e}")
+        return None
 
 def generate_plot(data_name, x_column, y_column):
-    cursor.execute(f"SELECT {x_column}, {y_column} FROM {data_name};")
-    data = cursor.fetchall()
-    df = pd.DataFrame(data, columns=[x_column, y_column])
+    try:
+        cursor.execute(f"SELECT \"{x_column}\", \"{y_column}\" FROM {data_name} WHERE \"{y_column}\" IS NOT NULL")
+        data = cursor.fetchall()
 
-    fig = go.Figure(data=go.Scatter(x=df[x_column], y=df[y_column], mode='markers'))
-    plot_url = fig.to_html(full_html=False)
+        df = pd.DataFrame(data, columns=[x_column, y_column])
 
-    return plot_url
+        fig = go.Figure(data=go.Scatter(x=df[x_column], y=df[y_column], mode='markers'))
+        plot_url = fig.to_html(full_html=False)
+
+        return plot_url
+    except Exception as e:
+        print(f"Error generating plot: {e}")
+        return None
+
+@app.route('/get_columns', methods=['POST'])
+def get_columns():
+    try:
+        data_name = request.json.get('data_name')
+        columns = get_column_names(data_name)
+        return jsonify({"columns": columns})
+    except Exception as e:
+        print(f"Error in /get_columns route: {e}")
+        return jsonify({"columns": []})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
