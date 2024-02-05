@@ -1,12 +1,14 @@
 {% extends 'base.html' %}
 
 {% block body %}
-<div class="container">
-  <div class="row">
+
+<div class="container" style="padding-top:50px ">
+  <div class="row" >
+
     <div class="col">
-        <br>
-        <h2 class="text-center"><u>Upload Data</u></h2>
-        <br>
+
+        <h2 class="text-center"><u>Upload Data</u></h2><br>
+
         <form id="uploadForm" method="post" action="/upload" enctype="multipart/form-data">
             <div class="input-group mb-3">
               <span class="input-group-text" id="dataName">Data Name :</span>
@@ -23,38 +25,38 @@
             </div>
         </form>
     </div>
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const form = event.target;
-            const formData = new FormData(form);
-
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(message => {
-                alert(message);
-                form.reset();
-            })
-            .catch(error => console.error('Error:', error));
-        });
-    </script>
 
     <div class="col">
-        <br>
+
         <h3 class="text-center text-muted mx-auto"><u>List of Uploaded Data :</u></h3>
         <br>
-        <ul>
+        <ul class="list-group col-6 mx-auto">
             {% for data_name in data_names %}
-                <ul class="list-group col-6 mx-auto">
-                  <li class="list-group-item list-group-item-secondary"><h5 class="text-center">{{ data_name }}</h5></li>
-                </ul>
+                <li class="list-group-item list-group-item-secondary">
+                      <h5 class="text-center">{{ data_name }}</h5>
+                </li>
             {% endfor %}
         </ul>
     </div>
   </div>
 </div>
 
+<script>
+       document.getElementById('uploadForm').addEventListener('submit', function(event) {
+           event.preventDefault();
+           const form = event.target;
+           const formData = new FormData(form);
+
+           fetch('/upload', {
+               method: 'POST',
+               body: formData
+           })
+           .then(response => response.text())
+           .then(message => {
+               alert(message);
+               form.reset();
+           })
+           .catch(error => console.error('Error:', error));
+       });
+</script>
 {% endblock %}

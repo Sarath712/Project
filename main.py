@@ -1,9 +1,8 @@
-import os
-
 from flask import Flask, render_template, request, jsonify
 import psycopg2
 import plotly.graph_objects as go
 import pandas as pd
+import os
 
 app = Flask(__name__)
 
@@ -12,9 +11,9 @@ conn = psycopg2.connect(
     password="12345",
     host="localhost",
     port="5433",
-    database="postgres"
-)
+    database="postgres")
 cursor = conn.cursor()
+
 
 @app.route('/')
 def home():
@@ -22,12 +21,12 @@ def home():
     data_names = [row[0] for row in cursor.fetchall()]
     return render_template('Home.html', data_names=data_names)
 
+
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
         data_name = request.form['dataName']
         csv_file = request.files['csvFile']
-
         file_path = os.path.join('uploads', csv_file.filename)
         csv_file.save(file_path)
 
@@ -54,6 +53,7 @@ def upload():
 
     return render_template('Upload_List.html', data_names=data_names)
 
+
 def generate_create_table_query(file_path, table_name):
     absolute_path = os.path.abspath(file_path)
     with open(absolute_path, 'r') as csv_file:
@@ -64,16 +64,28 @@ def generate_create_table_query(file_path, table_name):
     create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name} ({columns_definition});"
     return create_table_query, absolute_path
 
+
+@app.route('/get_columns', methods=['POST'])
+def get_columns():
+    try:
+        data_name = request.json.get('data_name')
+        columns = get_column_names(data_name)
+        return jsonify({"columns": columns})
+    except Exception as e:
+        print(f"Error in /get_columns route: {e}")
+        return jsonify({"columns": []})
+
+
 @app.route('/plot', methods=['GET', 'POST'])
 def plot():
     global cursor, conn
     try:
         conn = psycopg2.connect(
-                user="postgres",
-                password="12345",
-                host="localhost",
-                port="5433",
-                database="postgres")
+            user="postgres",
+            password="12345",
+            host="localhost",
+            port="5433",
+            database="postgres")
         cursor = conn.cursor()
 
         cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
@@ -81,13 +93,11 @@ def plot():
 
         if request.method == 'POST':
             data_name = request.form.get('dataName', '')
-            print(f"Received data_name: {data_name}")
 
             if not data_name:
-                return 'Data name is required', 400  # Bad Request
+                return 'Data name is required', 400
 
             columns = get_column_names(data_name)
-            print(f"Columns in /plot route: {columns}")
 
             x_column = request.form.get('xColumn', '')
             operation = request.form.get('operation', '')
@@ -98,7 +108,8 @@ def plot():
             else:
                 result = None
 
-            cursor.execute(f"SELECT \"{x_column}\", \"{x_column}\" FROM \"{data_name}\" WHERE \"{x_column}\" IS NOT NULL")
+            cursor.execute(
+                f"SELECT \"{x_column}\", \"{x_column}\" FROM \"{data_name}\" WHERE \"{x_column}\" IS NOT NULL")
             data = cursor.fetchall()
 
             return render_template('Plot.html', data_names=data_names, columns=columns, data_name=data_name,
@@ -114,15 +125,16 @@ def plot():
 
 def get_column_names(data_name):
     with psycopg2.connect(
-                user="postgres",
-                password="12345",
-                host="localhost",
-                port="5433",
-                database="postgres") as conn:
+            user="postgres",
+            password="12345",
+            host="localhost",
+            port="5433",
+            database="postgres") as conn:
         with conn.cursor() as cursor:
             cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{data_name}'")
             columns = [row[0] for row in cursor.fetchall()]
             return columns
+
 
 def perform_computation(data_name, column_name, operation, cursor):
     try:
@@ -132,6 +144,7 @@ def perform_computation(data_name, column_name, operation, cursor):
     except Exception as e:
         print(f"Error performing computation: {e}")
         return None
+
 
 def generate_plot(data_name, x_column, y_column):
     try:
@@ -147,16 +160,6 @@ def generate_plot(data_name, x_column, y_column):
     except Exception as e:
         print(f"Error generating plot: {e}")
         return None
-
-@app.route('/get_columns', methods=['POST'])
-def get_columns():
-    try:
-        data_name = request.json.get('data_name')
-        columns = get_column_names(data_name)
-        return jsonify({"columns": columns})
-    except Exception as e:
-        print(f"Error in /get_columns route: {e}")
-        return jsonify({"columns": []})
 
 
 if __name__ == '__main__':

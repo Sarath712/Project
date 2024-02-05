@@ -1,12 +1,14 @@
 {% extends 'base.html' %}
 
 {% block body %}
-<h2 class="text-center">Plot Data</h2><br>
 
-<h3>View Computed Operation</h3><br>
+<br><h1 class="text-center text-uppercase"><u>Plot Data</u></h1><br>
+<h3>View Computed Operation :</h3><br>
+
 <form method="post" action="/plot">
     <div class="container">
       <div class="row">
+
         <div class="col">
           <label for="dataName">Data Name:</label>
             <select id="dataName" name="dataName">
@@ -15,10 +17,12 @@
                 {% endfor %}
             </select>
         </div>
+
         <div class="col">
             <label for="xColumn">Column:</label>
                 <input type="text" name="xColumn" id="xColumn" placeholder="Enter column name">
         </div>
+
         <div class="col">
           <label for="operation">Operation:</label>
             <select id="operation" name="operation">
@@ -26,45 +30,47 @@
                 <option value="max">Maximum</option>
                 <option value="sum">Sum</option>
             </select>
-
         <input type="submit" value="Compute">
         </div>
+
         <div class="col">
-                <h5>Result: {{ result }}</h5>
-        </div>
+            <h5>Result: {{ result }}</h5>
         </div>
       </div>
     </div>
-</form>
-<br>
-<h2>Show Plot</h2><br>
+</form><br>
+
+<h3>Show Plot :</h3><br>
+
 <form method="post" action="/plot">
     <div class="container">
-  <div class="row">
-    <div class="col">
-        <label for="dataNamePlot">Data Name:</label>
-            <select id="dataNamePlot" name="dataName" required>
-                {% for dataName in data_names %}
-                    <option value="{{ dataName }}">{{ dataName }}</option>
-                {% endfor %}
-            </select>
-    </div>
-    <div class="col">
-        <label for="xColumn">Select X Column:</label>
-            <input type="text" name="xColumn" id="xColumn_plot" placeholder="Enter column name">
-    </div>
-    <div class="col">
-        <label for="yColumn">Y Column:</label>
-            <input type="text" name="yColumn" id="yColumn" placeholder="Enter column name">
-    <button type="submit">Plot</button>
-    </div>
-  </div>
-</div>
-    <br>
-    <div class="row justify-content-md-center">
-        <img src="{{ plot_url }}" alt="Plot">
-    </div>
+        <div class="row">
 
+            <div class="col">
+                <label for="dataNamePlot">Data Name:</label>
+                    <select id="dataNamePlot" name="dataName" required>
+                        {% for dataName in data_names %}
+                            <option value="{{ dataName }}">{{ dataName }}</option>
+                        {% endfor %}
+                    </select>
+            </div>
+
+            <div class="col">
+                <label for="xColumn">Select X Column:</label>
+                    <input type="text" name="xColumn" id="xColumn_plot" placeholder="Enter column name">
+            </div>
+
+            <div class="col">
+                <label for="yColumn">Y Column:</label>
+                    <input type="text" name="yColumn" id="yColumn" placeholder="Enter column name">
+            <button type="submit">Plot</button>
+            </div>
+        </div><br>
+
+        <div class="row justify-content-md-center">
+                <img src="{{ plot_url }}" alt="Plot">
+        </div>
+    </div>
 </form>
 
 <script>
